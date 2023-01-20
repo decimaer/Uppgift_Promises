@@ -11,10 +11,10 @@
 	"author": "Hampus Dufberg Töttrup",
 	"license": "ISC",
 	"dependencies": {
-		"axios": "^1.2.3",
-		"parcel": "^2.8.3"
+		"axios": "^1.2.3"
 	},
 	"devDependencies": {
-		"buffer": "^5.7.1"
+		"buffer": "^5.7.1",
+		"parcel": "^2.8.3"
 	}
 }

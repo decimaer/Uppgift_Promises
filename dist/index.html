@@ -6,7 +6,23 @@
 		<title>Uppgift Promises</title>
 		<script src="/index.5d9dacde.js" defer=""></script>
 		<!-- <link rel="stylesheet" href="css/style.css" /> -->
-		<!-- BUG: error in parcel when linking stylesheet -->
+		<!-- BUG: error in parcel when linking stylesheet and style tag below -->
+		<!-- 		<style>
+			.section-container {
+				height: 100vh;
+				width: 100vw;
+			}
+		</style> -->
+		<!-- 
+         style="height: 100vh; width: 100vw;"
+       -->
 	</head>
-	<body></body>
+	<body>
+		<section id="main-container" class="section-container">
+			<article class="content-cards" id="weather-container"></article>
+			<article class="content-cards" id="time-date-container"></article>
+			<article class="content-cards" id="credit-container"></article>
+		</section>
+		<section id="gallery-container" class="section-container"></section>
+	</body>
 </html>

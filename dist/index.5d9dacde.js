@@ -563,36 +563,141 @@ var _config = require("./config");
 //TODO: function to set background img and author credits (possibly changing every n seconds?)
 const controlSetBackgroundImage = async function() {
     try {
-        const data = await _model.getData((0, _config.UNSPLASH_API_URL));
-        console.log(data);
-        const imageURL = data.data[0].urls.full;
-        console.log(imageURL);
-        _view.renderBackgroundImage(imageURL);
+        await _model.loadBackgroundImage();
+        const imageURL = _model.state.backgroundImage.currentBackground.urls.full;
+        const altText = _model.state.backgroundImage.currentBackground.alt_description;
+        console.log(_model.state.backgroundImage.currentBackground);
+        _view.renderBackgroundImage(_model.state.backgroundImage.currentBackground.urls.full, _model.state.backgroundImage.currentBackground.alt_description);
+        _view.renderImageCredit(_model.state.backgroundImage.currentBackground.user);
     } catch (error) {
         console.error(error);
     }
 };
 //TODO: weather api function
-const controlGetGeolocation = function() {
-// &lat=${lat}&lon=${lon}
+const controlSetWeather = async function(pos) {
+    try {
+        const { coords: { latitude , longitude  }  } = await pos;
+        _model.state.geoLocation = {
+            lat: latitude,
+            lon: longitude
+        };
+        // store data
+        _model.state.weatherData = await _model.getData(`${(0, _config.WEATHER_API_URL)}&lat=${latitude}&lon=${longitude}`);
+        console.log(latitude, longitude);
+        console.log(_model.state);
+        console.log(_model.state.weatherData);
+        //render weather
+        _view.renderWeather(_model.state.weatherData);
+    } catch (error) {
+        console.error(error);
+    }
 };
-const controlSetWeather = async function() {};
+const controlGetGeolocation = function() {
+    _view.getGeolocation((pos)=>{
+        // controlSetWeather(Promise.resolve(pos));
+        controlSetWeather(pos);
+    });
+// const pos2 = await pos;
+// console.log(pos2);
+//
+};
 //TODO: current date and time function
+const controlTimeDate = function() {
+    _model.dateTime(_view.renderTimeDate);
+};
 //TODO: Other API 1
 //TODO: Other API 2
+controlGetGeolocation();
 controlSetBackgroundImage();
+controlTimeDate();
 
 },{"./View":"5OTZN","./config":"4Wc5b","./model":"Py0LO"}],"5OTZN":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "renderImageCredit", ()=>renderImageCredit);
 parcelHelpers.export(exports, "renderBackgroundImage", ()=>renderBackgroundImage);
+parcelHelpers.export(exports, "renderWeather", ()=>renderWeather);
 parcelHelpers.export(exports, "getGeolocation", ()=>getGeolocation);
-const renderBackgroundImage = function(url) {
-    document.body.style.backgroundImage = `url('${url}')`;
-    document.body.style.backgroundSize = "cover";
+parcelHelpers.export(exports, "renderTimeDate", ()=>renderTimeDate);
+const mainContainer = document.getElementById("main-container");
+const sectionContainer = document.querySelectorAll(".section-container");
+const contentCards = document.querySelectorAll(".content-cards");
+const weatherContainer = document.getElementById("weather-container");
+const timeDateContainer = document.getElementById("time-date-container");
+const creditContainer = document.getElementById("credit-container");
+const setCSS = function() {
+    const cssBody = "margin: 0;";
+    const cssSectionContainer = "height: 100vh; width: auto;";
+    const cssContentCards = `
+      display: flex;
+      flex-direction: row;
+      margin: 0;
+      padding: 1em;
+      height: fit-content;
+      width: fit-content;
+      background-color: white;
+      border-radius: 15px;
+   `;
+    const cssWeatherContainer = `
+      position: absolute;
+      right: 1em;
+      top: 1em;
+   `;
+    const cssTimeDateContainer = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+   `;
+    const cssCreditContainer = `
+      position: absolute;
+      left: 1em;
+      bottom: 1em;
+   `;
+    document.body.style.cssText = cssBody;
+    sectionContainer.forEach((el)=>{
+        el.style.cssText = cssSectionContainer;
+    });
+    weatherContainer.style.cssText = cssWeatherContainer + cssContentCards;
+    timeDateContainer.style.cssText = cssTimeDateContainer + cssContentCards;
+    creditContainer.style.cssText = cssCreditContainer + cssContentCards;
+};
+setCSS();
+const renderImageCredit = function(data) {
+    console.log(data);
+    creditContainer.innerHTML = `
+   <img src="${data.profile_image.medium}">
+   <p>Photo by <a href="${data.links.self}">${data.name}</a> on <a href="https://unsplash.com/">Unsplash</a></p>
+`;
+};
+const renderBackgroundImage = function(url, alt) {
+    mainContainer.style.backgroundImage = `url('${url}')`;
+    // mainContainer.style.height = "100vh";
+    // mainContainer.style.width = "100vw";
+    mainContainer.style.backgroundSize = "cover";
+    mainContainer.setAttribute("title", `background image: ${alt}`);
+};
+const renderWeather = function(weatherData) {
+    weatherContainer.insertAdjacentHTML("beforeend", `
+      <div>
+       <h1 class="place">${weatherData.data.name}</h1>
+       <p class="temp">${Math.round(weatherData.data.main.temp)}°C</p>
+       <p class="sky">${weatherData.data.weather[0].main}</p>
+       </div>
+       <img class="skyicon" src="http://openweathermap.org/img/wn/${weatherData.data.weather[0].icon}@2x.png" alt="">
+       `);
 };
 const getGeolocation = function(success) {
-    navigator.geolocation.getCurrentPosition(success);
+    navigator.geolocation.getCurrentPosition(function(pos) {
+        success(pos);
+    });
+};
+const renderTimeDate = function(timeDate) {
+    timeDateContainer.innerHTML = `
+      <p>${timeDate}</p>
+
+
+   `;
 };
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"gkKU3":[function(require,module,exports) {
@@ -632,7 +737,7 @@ parcelHelpers.export(exports, "UNSPLASH_API_URL", ()=>UNSPLASH_API_URL);
 parcelHelpers.export(exports, "WEATHER_API_URL", ()=>WEATHER_API_URL);
 const UNSPLASH_API_KEY = "j-zMGC9DSdNwckUvHCyKnbObujQDpIoMlz7R1z1pTBQ";
 const WEATHER_API_KEY = "cf884975fe56a901fb868d0f0d730477";
-const UNSPLASH_API_URL = `https://api.unsplash.com/topics/wallpapers/photos/?orientation=landscape&client_id=${UNSPLASH_API_KEY}`;
+const UNSPLASH_API_URL = `https://api.unsplash.com/topics/wallpapers/photos/?orientation=landscape&per_page=30&client_id=${UNSPLASH_API_KEY}`;
 const WEATHER_API_URL = `https://api.openweathermap.org/data/2.5/weather?units=metric&appid=${WEATHER_API_KEY}`;
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"Py0LO":[function(require,module,exports) {
@@ -640,9 +745,16 @@ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "state", ()=>state);
 parcelHelpers.export(exports, "getData", ()=>getData);
+parcelHelpers.export(exports, "loadBackgroundImage", ()=>loadBackgroundImage);
+parcelHelpers.export(exports, "dateTime", ()=>dateTime);
 var _axios = require("axios");
 var _axiosDefault = parcelHelpers.interopDefault(_axios);
-const state = {};
+var _config = require("./config");
+const state = {
+    backgroundImage: {},
+    geoLocation: {},
+    locale: navigator.language
+};
 const getData = async function(url) {
     try {
         return await (0, _axiosDefault.default).get(url);
@@ -650,8 +762,35 @@ const getData = async function(url) {
         console.error(error);
     }
 };
+const loadBackgroundImage = async function() {
+    try {
+        // get collection of images
+        state.backgroundImage.fullData = await getData((0, _config.UNSPLASH_API_URL));
+        // choose random image
+        const random = Math.floor(Math.random() * 30);
+        state.backgroundImage.currentBackground = state.backgroundImage.fullData.data[random];
+        console.log(state.backgroundImage);
+    } catch (error) {
+        console.error(error);
+    }
+};
+const dateTime = function(callback) {
+    const options = {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric"
+    };
+    const formatedDateTime = new Intl.DateTimeFormat(state.locale, options);
+    callback(formatedDateTime.format(new Date()));
+    setInterval(()=>{
+        callback(formatedDateTime.format(new Date()));
+    }, 1000);
+};
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","axios":"jo6P5"}],"jo6P5":[function(require,module,exports) {
+},{"axios":"jo6P5","./config":"4Wc5b","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"jo6P5":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "default", ()=>(0, _axiosJsDefault.default));
