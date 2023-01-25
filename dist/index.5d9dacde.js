@@ -559,11 +559,12 @@ function hmrAccept(bundle, id) {
 },{}],"1Z4Rq":[function(require,module,exports) {
 var _model = require("./model");
 var _view = require("./View");
+var _preloaderGallery = require("./preloaderGallery");
 var _config = require("./config");
 //TODO: function to set background img and author credits (possibly changing every n seconds?)
 const controlSetBackgroundImage = async function() {
     try {
-        await _model.loadBackgroundImage();
+        await _model.loadBackgroundImage((0, _config.UNSPLASH_API_URL));
         const imageURL = _model.state.backgroundImage.currentBackground.urls.full;
         const altText = _model.state.backgroundImage.currentBackground.alt_description;
         console.log(_model.state.backgroundImage.currentBackground);
@@ -605,155 +606,41 @@ const controlGetGeolocation = function() {
 const controlTimeDate = function() {
     _model.dateTime(_view.renderTimeDate);
 };
-//TODO: Other API 1
+//TODO: Other API 1: on this day - picks randomly one of the available 'on this day' articles from wikipedia
+//https://en.wikipedia.org/api/rest_v1/feed/featured/2023/01/19
+const controlOnThisDayAPI = async function() {
+    await _model.loadOnThisDayAPI((0, _config.ON_THIS_DAY_API_URL));
+    _view.renderOnThisDayAPI(_model.state.onThisDayAPI);
+};
 //TODO: Other API 2
 controlGetGeolocation();
 controlSetBackgroundImage();
 controlTimeDate();
+controlOnThisDayAPI();
 
-},{"./View":"5OTZN","./config":"4Wc5b","./model":"Py0LO"}],"5OTZN":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "renderImageCredit", ()=>renderImageCredit);
-parcelHelpers.export(exports, "renderBackgroundImage", ()=>renderBackgroundImage);
-parcelHelpers.export(exports, "renderWeather", ()=>renderWeather);
-parcelHelpers.export(exports, "getGeolocation", ()=>getGeolocation);
-parcelHelpers.export(exports, "renderTimeDate", ()=>renderTimeDate);
-const mainContainer = document.getElementById("main-container");
-const sectionContainer = document.querySelectorAll(".section-container");
-const contentCards = document.querySelectorAll(".content-cards");
-const weatherContainer = document.getElementById("weather-container");
-const timeDateContainer = document.getElementById("time-date-container");
-const creditContainer = document.getElementById("credit-container");
-const setCSS = function() {
-    const cssBody = "margin: 0;";
-    const cssSectionContainer = "height: 100vh; width: auto;";
-    const cssContentCards = `
-      display: flex;
-      flex-direction: row;
-      margin: 0;
-      padding: 1em;
-      height: fit-content;
-      width: fit-content;
-      background-color: white;
-      border-radius: 15px;
-   `;
-    const cssWeatherContainer = `
-      position: absolute;
-      right: 1em;
-      top: 1em;
-   `;
-    const cssTimeDateContainer = `
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-   `;
-    const cssCreditContainer = `
-      position: absolute;
-      left: 1em;
-      bottom: 1em;
-   `;
-    document.body.style.cssText = cssBody;
-    sectionContainer.forEach((el)=>{
-        el.style.cssText = cssSectionContainer;
-    });
-    weatherContainer.style.cssText = cssWeatherContainer + cssContentCards;
-    timeDateContainer.style.cssText = cssTimeDateContainer + cssContentCards;
-    creditContainer.style.cssText = cssCreditContainer + cssContentCards;
-};
-setCSS();
-const renderImageCredit = function(data) {
-    console.log(data);
-    creditContainer.innerHTML = `
-   <img src="${data.profile_image.medium}">
-   <p>Photo by <a href="${data.links.self}">${data.name}</a> on <a href="https://unsplash.com/">Unsplash</a></p>
-`;
-};
-const renderBackgroundImage = function(url, alt) {
-    mainContainer.style.backgroundImage = `url('${url}')`;
-    // mainContainer.style.height = "100vh";
-    // mainContainer.style.width = "100vw";
-    mainContainer.style.backgroundSize = "cover";
-    mainContainer.setAttribute("title", `background image: ${alt}`);
-};
-const renderWeather = function(weatherData) {
-    weatherContainer.insertAdjacentHTML("beforeend", `
-      <div>
-       <h1 class="place">${weatherData.data.name}</h1>
-       <p class="temp">${Math.round(weatherData.data.main.temp)}°C</p>
-       <p class="sky">${weatherData.data.weather[0].main}</p>
-       </div>
-       <img class="skyicon" src="http://openweathermap.org/img/wn/${weatherData.data.weather[0].icon}@2x.png" alt="">
-       `);
-};
-const getGeolocation = function(success) {
-    navigator.geolocation.getCurrentPosition(function(pos) {
-        success(pos);
-    });
-};
-const renderTimeDate = function(timeDate) {
-    timeDateContainer.innerHTML = `
-      <p>${timeDate}</p>
-
-
-   `;
-};
-
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"gkKU3":[function(require,module,exports) {
-exports.interopDefault = function(a) {
-    return a && a.__esModule ? a : {
-        default: a
-    };
-};
-exports.defineInteropFlag = function(a) {
-    Object.defineProperty(a, "__esModule", {
-        value: true
-    });
-};
-exports.exportAll = function(source, dest) {
-    Object.keys(source).forEach(function(key) {
-        if (key === "default" || key === "__esModule" || dest.hasOwnProperty(key)) return;
-        Object.defineProperty(dest, key, {
-            enumerable: true,
-            get: function() {
-                return source[key];
-            }
-        });
-    });
-    return dest;
-};
-exports.export = function(dest, destName, get) {
-    Object.defineProperty(dest, destName, {
-        enumerable: true,
-        get: get
-    });
-};
-
-},{}],"4Wc5b":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "UNSPLASH_API_URL", ()=>UNSPLASH_API_URL);
-parcelHelpers.export(exports, "WEATHER_API_URL", ()=>WEATHER_API_URL);
-const UNSPLASH_API_KEY = "j-zMGC9DSdNwckUvHCyKnbObujQDpIoMlz7R1z1pTBQ";
-const WEATHER_API_KEY = "cf884975fe56a901fb868d0f0d730477";
-const UNSPLASH_API_URL = `https://api.unsplash.com/topics/wallpapers/photos/?orientation=landscape&per_page=30&client_id=${UNSPLASH_API_KEY}`;
-const WEATHER_API_URL = `https://api.openweathermap.org/data/2.5/weather?units=metric&appid=${WEATHER_API_KEY}`;
-
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"Py0LO":[function(require,module,exports) {
+},{"./model":"Py0LO","./View":"5OTZN","./preloaderGallery":"3IGXL","./config":"4Wc5b"}],"Py0LO":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "state", ()=>state);
+parcelHelpers.export(exports, "getAuthorizedData", ()=>getAuthorizedData);
 parcelHelpers.export(exports, "getData", ()=>getData);
 parcelHelpers.export(exports, "loadBackgroundImage", ()=>loadBackgroundImage);
 parcelHelpers.export(exports, "dateTime", ()=>dateTime);
+parcelHelpers.export(exports, "loadOnThisDayAPI", ()=>loadOnThisDayAPI);
 var _axios = require("axios");
 var _axiosDefault = parcelHelpers.interopDefault(_axios);
 var _config = require("./config");
 const state = {
     backgroundImage: {},
     geoLocation: {},
-    locale: navigator.language
+    locale: navigator.language,
+    onThisDayAPI: {}
+};
+const getAuthorizedData = async function(url) {
+    try {
+        const encodedURL = encodeURIComponent(url);
+        return await getData();
+    } catch (error) {}
 };
 const getData = async function(url) {
     try {
@@ -762,10 +649,10 @@ const getData = async function(url) {
         console.error(error);
     }
 };
-const loadBackgroundImage = async function() {
+const loadBackgroundImage = async function(url) {
     try {
         // get collection of images
-        state.backgroundImage.fullData = await getData((0, _config.UNSPLASH_API_URL));
+        state.backgroundImage.fullData = await getData(url);
         // choose random image
         const random = Math.floor(Math.random() * 30);
         state.backgroundImage.currentBackground = state.backgroundImage.fullData.data[random];
@@ -788,6 +675,25 @@ const dateTime = function(callback) {
     setInterval(()=>{
         callback(formatedDateTime.format(new Date()));
     }, 1000);
+};
+const loadOnThisDayAPI = async function(url) {
+    try {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, "0");
+        const day = date.getDate().toString().padStart(2, "0");
+        const fullURL = url + year + "/" + month + "/" + day;
+        console.log(fullURL);
+        const data = await getData(fullURL);
+        console.log(data);
+        const numberOfArticles = data.data.onthisday.length;
+        const random = Math.floor(Math.random() * numberOfArticles);
+        console.log(random);
+        state.onThisDayAPI = data.data.onthisday[random];
+        console.log(state.onThisDayAPI);
+    } catch (error) {
+        console.error(error);
+    }
 };
 
 },{"axios":"jo6P5","./config":"4Wc5b","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"jo6P5":[function(require,module,exports) {
@@ -1437,7 +1343,37 @@ function bind(fn, thisArg) {
 }
 exports.default = bind;
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"cpqD8":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"gkKU3":[function(require,module,exports) {
+exports.interopDefault = function(a) {
+    return a && a.__esModule ? a : {
+        default: a
+    };
+};
+exports.defineInteropFlag = function(a) {
+    Object.defineProperty(a, "__esModule", {
+        value: true
+    });
+};
+exports.exportAll = function(source, dest) {
+    Object.keys(source).forEach(function(key) {
+        if (key === "default" || key === "__esModule" || dest.hasOwnProperty(key)) return;
+        Object.defineProperty(dest, key, {
+            enumerable: true,
+            get: function() {
+                return source[key];
+            }
+        });
+    });
+    return dest;
+};
+exports.export = function(dest, destName, get) {
+    Object.defineProperty(dest, destName, {
+        enumerable: true,
+        get: get
+    });
+};
+
+},{}],"cpqD8":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _utilsJs = require("./../utils.js");
@@ -4881,6 +4817,192 @@ Object.entries(HttpStatusCode).forEach(([key, value])=>{
 });
 exports.default = HttpStatusCode;
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["jy52z","1Z4Rq"], "1Z4Rq", "parcelRequire7e12")
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"4Wc5b":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "UNSPLASH_API_URL", ()=>UNSPLASH_API_URL);
+parcelHelpers.export(exports, "WEATHER_API_URL", ()=>WEATHER_API_URL);
+parcelHelpers.export(exports, "ON_THIS_DAY_API_URL", ()=>ON_THIS_DAY_API_URL);
+const UNSPLASH_API_URL = `https://api.unsplash.com/topics/wallpapers/photos/?orientation=landscape&per_page=30&client_id=${UNSPLASH_API_KEY}`;
+const WEATHER_API_URL = `https://api.openweathermap.org/data/2.5/weather?units=metric&appid=${WEATHER_API_KEY}`;
+const ON_THIS_DAY_API_URL = "https://en.wikipedia.org/api/rest_v1/feed/featured/";
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"5OTZN":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "renderImageCredit", ()=>renderImageCredit);
+parcelHelpers.export(exports, "renderBackgroundImage", ()=>renderBackgroundImage);
+parcelHelpers.export(exports, "renderWeather", ()=>renderWeather);
+parcelHelpers.export(exports, "getGeolocation", ()=>getGeolocation);
+parcelHelpers.export(exports, "renderTimeDate", ()=>renderTimeDate);
+parcelHelpers.export(exports, "renderOnThisDayAPI", ()=>renderOnThisDayAPI);
+const mainContainer = document.getElementById("main-container");
+const sectionContainer = document.querySelectorAll(".section-container");
+const galleryContainer = document.getElementById("gallery-container");
+const contentCards = document.querySelectorAll(".content-cards");
+const weatherContainer = document.getElementById("weather-container");
+const timeDateContainer = document.getElementById("time-date-container");
+const creditContainer = document.getElementById("credit-container");
+const onThisDayContainer = document.getElementById("on-this-day-container");
+const css = {
+    cssBody: "margin: 0;",
+    cssSectionContainer: "height: 100vh; width: auto;",
+    cssContentCards: `
+      display: flex;
+      flex-direction: row;
+      margin: 0;
+      padding: 1em;
+      height: fit-content;
+      width: fit-content;
+      background-color: white;
+      border-radius: 15px;
+      font-size: 0.7em;
+   `,
+    cssWeatherContainer: `
+      position: absolute;
+      right: 1em;
+      top: 1em;
+   `,
+    cssTimeDateContainer: `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+   `,
+    cssTimeDateTextElement: `
+      font-size: 2em;
+   `,
+    cssCreditContainer: `
+      align-items: center;
+      position: absolute;
+      left: 1em;
+      bottom: 1em;
+   `,
+    cssImageCreditContainer: `
+      width: 3em;
+      height: 3em;
+      border-radius: 50%;
+      padding-right: 1em;
+      `,
+    cssOnThisDayContainer: `
+      flex-direction: column;
+      position: absolute;
+      right: 1em;
+      bottom: 1em;
+      max-width: 30vw;
+   `
+};
+const setCSS = function() {
+    document.body.style.cssText = css.cssBody;
+    sectionContainer.forEach((el)=>{
+        el.style.cssText = css.cssSectionContainer;
+    });
+    weatherContainer.style.cssText = css.cssContentCards + css.cssWeatherContainer;
+    timeDateContainer.style.cssText = css.cssContentCards + css.cssTimeDateContainer;
+    creditContainer.style.cssText = css.cssContentCards + css.cssCreditContainer;
+    onThisDayContainer.style.cssText = css.cssContentCards + css.cssOnThisDayContainer;
+};
+setCSS();
+const renderImageCredit = function(data) {
+    console.log(data);
+    creditContainer.innerHTML = `
+   <img src="${data.profile_image.medium}">
+   <p>Photo by <a href="${data.links.self}">${data.name}</a> on <a href="https://unsplash.com/">Unsplash</a></p>
+   `;
+    const imageCreditContainer = creditContainer.firstElementChild;
+    imageCreditContainer.style.cssText = css.cssImageCreditContainer;
+};
+const renderBackgroundImage = function(url, alt) {
+    mainContainer.style.backgroundImage = `url('${url}')`;
+    mainContainer.style.backgroundSize = "cover";
+    mainContainer.setAttribute("title", `background image: ${alt}`);
+};
+const renderWeather = function(weatherData) {
+    weatherContainer.insertAdjacentHTML("beforeend", `
+      <div>
+       <h1 class="place">${weatherData.data.name}</h1>
+       <p class="temp">${Math.round(weatherData.data.main.temp)}°C</p>
+       <p class="sky">${weatherData.data.weather[0].main}</p>
+       </div>
+       <img class="skyicon" src="http://openweathermap.org/img/wn/${weatherData.data.weather[0].icon}@2x.png" alt="">
+       `);
+};
+const getGeolocation = function(success) {
+    navigator.geolocation.getCurrentPosition(function(pos) {
+        success(pos);
+    });
+};
+const renderTimeDate = function(timeDate) {
+    timeDateContainer.innerHTML = `
+      <p>${timeDate}</p>
+   `;
+    const timeDateTextElement = timeDateContainer.firstElementChild;
+    timeDateTextElement.style.cssText = css.cssTimeDateTextElement;
+};
+const renderOnThisDayAPI = function(data) {
+    onThisDayContainer.innerHTML = `
+      <span style="font-weight: bold">Did you know that on this day in ${data.year}....</span>
+      <span>${data.text} Read more: ${data.pages.map((item)=>`<a href="${item.content_urls.desktop.page}">${item.normalizedtitle}</a>`).join(", ")}</span>
+   `;
+};
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"3IGXL":[function(require,module,exports) {
+var _modelJs = require("./model.js");
+const galleryContainer = document.getElementById("gallery-container");
+const cssGalleryImages = `
+   height: 15em;
+   width: auto;
+`;
+const cssGalleryBlur = `
+   filter: blur(20px);
+`;
+const galleryState = {
+    galleryIsLoaded: false
+};
+const renderGallery = function(images) {
+    const allImagesMarkup = images.map((image)=>{
+        return `<img src=${image} class="thumbnail">`;
+    }).join("");
+    galleryContainer.insertAdjacentHTML("beforeend", allImagesMarkup);
+    galleryContainer.querySelectorAll("img").forEach((el)=>el.style.cssText = cssGalleryImages + cssGalleryBlur);
+};
+const controlPreloaderGallery = async function(entries) {
+    try {
+        if (!entries[0].isIntersecting) return;
+        if (galleryState.galleryIsLoaded) return;
+        const thumbnails = _modelJs.state.backgroundImage.fullData.data.map((imgData)=>imgData.urls.thumb);
+        renderGallery(thumbnails);
+        const imagePromises = _modelJs.state.backgroundImage.fullData.data.map((imgData)=>{
+            new Promise((resolve, reject)=>{
+                const img = new Image();
+                img.src = imgData.urls.regular;
+                img.style.cssText = cssGalleryImages;
+                img.addEventListener("load", ()=>{
+                    galleryContainer.appendChild(img);
+                    resolve(img);
+                });
+                img.addEventListener("error", (err)=>reject(err));
+            });
+        });
+        // This is just for demonstration purposes
+        imagePromises.push(new Promise((resolve, _)=>setTimeout(()=>resolve(), 2000)));
+        // Clear temporary thumbnails
+        imagePromises.unshift(new Promise((resolve, _)=>{
+            galleryContainer.querySelectorAll(".thumbnail").forEach((img)=>img.remove());
+            resolve();
+        }));
+        // await Promise.all(imagePromises);
+        galleryState.galleryIsLoaded = true;
+        console.info("Gallery loaded");
+    } catch (error) {}
+};
+const observerOptions = {
+    root: null,
+    threshold: 0.1
+};
+const intersectionObserver = new IntersectionObserver(controlPreloaderGallery, observerOptions);
+intersectionObserver.observe(galleryContainer);
+
+},{"./model.js":"Py0LO"}]},["jy52z","1Z4Rq"], "1Z4Rq", "parcelRequire7e12")
 
 //# sourceMappingURL=index.5d9dacde.js.map

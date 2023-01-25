@@ -1,11 +1,17 @@
 import * as model from "./model";
 import * as view from "./View";
-import { UNSPLASH_API_URL, WEATHER_API_URL } from "./config";
+import * as preloaderGallery from "./preloaderGallery";
+
+import {
+	UNSPLASH_API_URL,
+	WEATHER_API_URL,
+	ON_THIS_DAY_API_URL,
+} from "./config";
 
 //TODO: function to set background img and author credits (possibly changing every n seconds?)
 const controlSetBackgroundImage = async function () {
 	try {
-		await model.loadBackgroundImage();
+		await model.loadBackgroundImage(UNSPLASH_API_URL);
 
 		const imageURL = model.state.backgroundImage.currentBackground.urls.full;
 		const altText =
@@ -68,10 +74,18 @@ const controlTimeDate = function () {
 	model.dateTime(view.renderTimeDate);
 };
 
-//TODO: Other API 1
+//TODO: Other API 1: on this day - picks randomly one of the available 'on this day' articles from wikipedia
+//https://en.wikipedia.org/api/rest_v1/feed/featured/2023/01/19
+
+const controlOnThisDayAPI = async function () {
+	await model.loadOnThisDayAPI(ON_THIS_DAY_API_URL);
+
+	view.renderOnThisDayAPI(model.state.onThisDayAPI);
+};
 
 //TODO: Other API 2
 
 controlGetGeolocation();
 controlSetBackgroundImage();
 controlTimeDate();
+controlOnThisDayAPI();

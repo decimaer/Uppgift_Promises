@@ -1,14 +1,16 @@
 const mainContainer = document.getElementById("main-container");
 const sectionContainer = document.querySelectorAll(".section-container");
+const galleryContainer = document.getElementById("gallery-container");
 const contentCards = document.querySelectorAll(".content-cards");
 const weatherContainer = document.getElementById("weather-container");
 const timeDateContainer = document.getElementById("time-date-container");
 const creditContainer = document.getElementById("credit-container");
+const onThisDayContainer = document.getElementById("on-this-day-container");
 
-const setCSS = function () {
-	const cssBody = "margin: 0;";
-	const cssSectionContainer = "height: 100vh; width: auto;";
-	const cssContentCards = `
+const css = {
+	cssBody: "margin: 0;",
+	cssSectionContainer: "height: 100vh; width: auto;",
+	cssContentCards: `
       display: flex;
       flex-direction: row;
       margin: 0;
@@ -17,31 +19,56 @@ const setCSS = function () {
       width: fit-content;
       background-color: white;
       border-radius: 15px;
-   `;
-	const cssWeatherContainer = `
+      font-size: 0.7em;
+   `,
+	cssWeatherContainer: `
       position: absolute;
       right: 1em;
       top: 1em;
-   `;
-	const cssTimeDateContainer = `
+   `,
+	cssTimeDateContainer: `
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-   `;
-	const cssCreditContainer = `
+   `,
+	cssTimeDateTextElement: `
+      font-size: 2em;
+   `,
+	cssCreditContainer: `
+      align-items: center;
       position: absolute;
       left: 1em;
       bottom: 1em;
-   `;
+   `,
+	cssImageCreditContainer: `
+      width: 3em;
+      height: 3em;
+      border-radius: 50%;
+      padding-right: 1em;
+      `,
+	cssOnThisDayContainer: `
+      flex-direction: column;
+      position: absolute;
+      right: 1em;
+      bottom: 1em;
+      max-width: 30vw;
+   `,
+};
 
-	document.body.style.cssText = cssBody;
+const setCSS = function () {
+	document.body.style.cssText = css.cssBody;
 	sectionContainer.forEach((el) => {
-		el.style.cssText = cssSectionContainer;
+		el.style.cssText = css.cssSectionContainer;
 	});
-	weatherContainer.style.cssText = cssWeatherContainer + cssContentCards;
-	timeDateContainer.style.cssText = cssTimeDateContainer + cssContentCards;
-	creditContainer.style.cssText = cssCreditContainer + cssContentCards;
+	weatherContainer.style.cssText =
+		css.cssContentCards + css.cssWeatherContainer;
+	timeDateContainer.style.cssText =
+		css.cssContentCards + css.cssTimeDateContainer;
+
+	creditContainer.style.cssText = css.cssContentCards + css.cssCreditContainer;
+	onThisDayContainer.style.cssText =
+		css.cssContentCards + css.cssOnThisDayContainer;
 };
 setCSS();
 
@@ -50,14 +77,14 @@ export const renderImageCredit = function (data) {
 	creditContainer.innerHTML = `
    <img src="${data.profile_image.medium}">
    <p>Photo by <a href="${data.links.self}">${data.name}</a> on <a href="https://unsplash.com/">Unsplash</a></p>
-`;
+   `;
+
+	const imageCreditContainer = creditContainer.firstElementChild;
+	imageCreditContainer.style.cssText = css.cssImageCreditContainer;
 };
 
 export const renderBackgroundImage = function (url, alt) {
 	mainContainer.style.backgroundImage = `url('${url}')`;
-	// mainContainer.style.height = "100vh";
-	// mainContainer.style.width = "100vw";
-
 	mainContainer.style.backgroundSize = "cover";
 
 	mainContainer.setAttribute("title", `background image: ${alt}`);
@@ -88,7 +115,22 @@ export const getGeolocation = function (success) {
 export const renderTimeDate = function (timeDate) {
 	timeDateContainer.innerHTML = `
       <p>${timeDate}</p>
+   `;
 
+	const timeDateTextElement = timeDateContainer.firstElementChild;
+	timeDateTextElement.style.cssText = css.cssTimeDateTextElement;
+};
 
+export const renderOnThisDayAPI = function (data) {
+	onThisDayContainer.innerHTML = `
+      <span style="font-weight: bold">Did you know that on this day in ${
+			data.year
+		}....</span>
+      <span>${data.text} Read more: ${data.pages
+		.map(
+			(item) =>
+				`<a href="${item.content_urls.desktop.page}">${item.normalizedtitle}</a>`
+		)
+		.join(", ")}</span>
    `;
 };
