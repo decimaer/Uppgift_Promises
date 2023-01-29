@@ -4,6 +4,8 @@ import fs from "fs";
 
 import { unsplashAPIKey, weatherAPIKey, wordnikAPIKey } from "./apiKeys.mjs";
 
+const logFile = "/usr/local/www/node/server-log";
+
 const responseHeader = {
 	"Content-type": "application/json",
 	"Access-Control-Allow-Origin": "*",
@@ -11,12 +13,13 @@ const responseHeader = {
 
 const getData = async function (url) {
 	try {
-		return await axios.get(url, {
+		const response = await axios.get(url, {
 			transformResponse: (res) => {
 				return res;
 			},
 			responseType: "json",
 		});
+		return response.data;
 	} catch (error) {
 		throw error;
 	}
@@ -24,13 +27,6 @@ const getData = async function (url) {
 
 const serverHandler = async function (request, response) {
 	try {
-		// await fs.writeFile(
-		// 	"/usr/local/www/node/log",
-		// 	`Request initiated with: ${request}`,
-		// 	"utf-8",
-		// 	() => {}
-		// );
-
 		const path = new URL(request.url, "http://oblako.dufberg.se:81");
 
 		if (path.pathname === "/unsplash/") {
@@ -38,19 +34,19 @@ const serverHandler = async function (request, response) {
 				decodeURIComponent(path.searchParams.get("url")) + unsplashAPIKey;
 			console.log(sourceURL);
 
-			const obj = await getData(sourceURL);
+			const data = await getData(sourceURL);
 
 			response.writeHead(200, responseHeader);
-			response.end(obj.data);
+			response.end(data);
 		} else if (path.pathname === "/openweathermap/") {
 			const sourceURL =
 				decodeURIComponent(path.searchParams.get("url")) + weatherAPIKey;
 			console.log(sourceURL);
 
-			const obj = await getData(sourceURL);
+			const data = await getData(sourceURL);
 
 			response.writeHead(200, responseHeader);
-			response.end(obj.data);
+			response.end(data);
 		} else if (path.pathname === "/wordoftheday/") {
 			const sourceURL =
 				decodeURIComponent(path.searchParams.get("url")) +
@@ -58,26 +54,29 @@ const serverHandler = async function (request, response) {
 				wordnikAPIKey;
 			console.log(sourceURL);
 
-			const obj = await getData(sourceURL);
+			const data = await getData(sourceURL);
 
 			response.writeHead(200, responseHeader);
-			response.end(obj.data);
+			response.end(data);
 		} else {
-			// fs.writeFile("log", `Error 404`, "utf-8");
-			response.writeHead(404);
-			response.end("<h1>Error 404 - file not found!</h1>");
 			throw new Error(
 				`User request unavailable: ${path.pathname} @ ${path}`
 			);
 		}
 	} catch (error) {
-		// fs.writeFile("log", `${error}`, "utf-8", () => {});
-		console.error(error);
+		response.writeHead(404, responseHeader);
+		response.end(
+			JSON.stringify({
+				error: `${error}`,
+			})
+		);
+
+		fs.appendFile(logFile, `\n${new Date()}: ${error}`, "utf-8", () => {});
 	}
 };
 
 const server = http.createServer(serverHandler);
 
 server.listen(80, "oblako.dufberg.se", () => {
-	console.log("server listening...");
+	console.log("Node JS server listening to port 80");
 });
