@@ -6,6 +6,9 @@ const weatherContainer = document.getElementById("weather-container");
 const timeDateContainer = document.getElementById("time-date-container");
 const creditContainer = document.getElementById("credit-container");
 const onThisDayContainer = document.getElementById("on-this-day-container");
+const wordOfTheDayContainer = document.getElementById(
+	"word-of-the-day-container"
+);
 
 const css = {
 	cssBody: "margin: 0;",
@@ -54,6 +57,13 @@ const css = {
       bottom: 1em;
       max-width: 30vw;
    `,
+	cssWordOftheDayContainer: `
+      flex-direction: column;
+      position: absolute;
+      left: 1em;
+      top: 1em;
+      max-width: 30vw;
+   `,
 };
 
 const setCSS = function () {
@@ -69,6 +79,9 @@ const setCSS = function () {
 	creditContainer.style.cssText = css.cssContentCards + css.cssCreditContainer;
 	onThisDayContainer.style.cssText =
 		css.cssContentCards + css.cssOnThisDayContainer;
+
+	wordOfTheDayContainer.style.cssText =
+		css.cssContentCards + css.cssWordOftheDayContainer;
 };
 setCSS();
 
@@ -132,5 +145,13 @@ export const renderOnThisDayAPI = function (data) {
 				`<a href="${item.content_urls.desktop.page}">${item.normalizedtitle}</a>`
 		)
 		.join(", ")}</span>
+   `;
+};
+
+export const renderWordOfTheDayAPI = function (data) {
+	wordOfTheDayContainer.innerHTML = `
+      <p style="font-weight: bold">Word Of The Day: ${data.word}</p>
+      <span> ${data.definitions[0].text}</span>
+      <a href="https://wordnik.com/words/${data.word}">Learn more about this word on Wordnik</a>
    `;
 };

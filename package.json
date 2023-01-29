@@ -16,5 +16,6 @@
 	"devDependencies": {
 		"buffer": "^5.7.1",
 		"parcel": "^2.8.3"
-	}
+	},
+	"type": "module"
 }

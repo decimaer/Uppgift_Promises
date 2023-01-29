@@ -583,7 +583,7 @@ const controlSetWeather = async function(pos) {
             lon: longitude
         };
         // store data
-        _model.state.weatherData = await _model.getData(`${(0, _config.WEATHER_API_URL)}&lat=${latitude}&lon=${longitude}`);
+        _model.state.weatherData = await _model.getAuthorizedData(`${(0, _config.WEATHER_API_URL)}&lat=${latitude}&lon=${longitude}&appid=`, "/openweathermap/");
         console.log(latitude, longitude);
         console.log(_model.state);
         console.log(_model.state.weatherData);
@@ -609,14 +609,23 @@ const controlTimeDate = function() {
 //TODO: Other API 1: on this day - picks randomly one of the available 'on this day' articles from wikipedia
 //https://en.wikipedia.org/api/rest_v1/feed/featured/2023/01/19
 const controlOnThisDayAPI = async function() {
-    await _model.loadOnThisDayAPI((0, _config.ON_THIS_DAY_API_URL));
-    _view.renderOnThisDayAPI(_model.state.onThisDayAPI);
+    try {
+        await _model.loadOnThisDayAPI((0, _config.ON_THIS_DAY_API_URL));
+        _view.renderOnThisDayAPI(_model.state.onThisDayAPI);
+    } catch (error) {}
 };
-//TODO: Other API 2
+//TODO: Other API 2: wordnik
+const controlWordOfTheDay = async function() {
+    try {
+        await _model.loadWordOfTheDayAPI((0, _config.WORD_OF_THE_DAY_API_URL));
+        _view.renderwordOfTheDayAPI(_model.state.wordOfTheDayAPI);
+    } catch (error) {}
+};
 controlGetGeolocation();
 controlSetBackgroundImage();
 controlTimeDate();
 controlOnThisDayAPI();
+controlWordOfTheDay();
 
 },{"./model":"Py0LO","./View":"5OTZN","./preloaderGallery":"3IGXL","./config":"4Wc5b"}],"Py0LO":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
@@ -627,6 +636,7 @@ parcelHelpers.export(exports, "getData", ()=>getData);
 parcelHelpers.export(exports, "loadBackgroundImage", ()=>loadBackgroundImage);
 parcelHelpers.export(exports, "dateTime", ()=>dateTime);
 parcelHelpers.export(exports, "loadOnThisDayAPI", ()=>loadOnThisDayAPI);
+parcelHelpers.export(exports, "loadWordOfTheDayAPI", ()=>loadWordOfTheDayAPI);
 var _axios = require("axios");
 var _axiosDefault = parcelHelpers.interopDefault(_axios);
 var _config = require("./config");
@@ -636,11 +646,15 @@ const state = {
     locale: navigator.language,
     onThisDayAPI: {}
 };
-const getAuthorizedData = async function(url) {
+const getAuthorizedData = async function(url, api) {
     try {
         const encodedURL = encodeURIComponent(url);
-        return await getData();
-    } catch (error) {}
+        console.log(encodedURL);
+        console.log((0, _config.API_PROXY_SERVER_URL) + api + "?url=" + encodedURL);
+        return await getData((0, _config.API_PROXY_SERVER_URL) + api + "?url=" + encodedURL);
+    } catch (error) {
+        console.error(error);
+    }
 };
 const getData = async function(url) {
     try {
@@ -652,7 +666,7 @@ const getData = async function(url) {
 const loadBackgroundImage = async function(url) {
     try {
         // get collection of images
-        state.backgroundImage.fullData = await getData(url);
+        state.backgroundImage.fullData = await getAuthorizedData(url, "/unsplash/");
         // choose random image
         const random = Math.floor(Math.random() * 30);
         state.backgroundImage.currentBackground = state.backgroundImage.fullData.data[random];
@@ -691,6 +705,22 @@ const loadOnThisDayAPI = async function(url) {
         console.log(random);
         state.onThisDayAPI = data.data.onthisday[random];
         console.log(state.onThisDayAPI);
+    } catch (error) {
+        console.error(error);
+    }
+};
+const loadWordOfTheDayAPI = async function(url) {
+    try {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, "0");
+        const day = date.getDate().toString().padStart(2, "0");
+        const fullURL = url + year + "-" + month + "-" + day;
+        console.log(fullURL);
+        const data = await getAuthorizedData(fullURL, "/wordoftheday/");
+        console.log(data);
+        state.wordOfTheDayAPI = data.data;
+        console.log(state.wordOfTheDayAPI);
     } catch (error) {
         console.error(error);
     }
@@ -4823,9 +4853,13 @@ parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "UNSPLASH_API_URL", ()=>UNSPLASH_API_URL);
 parcelHelpers.export(exports, "WEATHER_API_URL", ()=>WEATHER_API_URL);
 parcelHelpers.export(exports, "ON_THIS_DAY_API_URL", ()=>ON_THIS_DAY_API_URL);
-const UNSPLASH_API_URL = `https://api.unsplash.com/topics/wallpapers/photos/?orientation=landscape&per_page=30&client_id=${UNSPLASH_API_KEY}`;
-const WEATHER_API_URL = `https://api.openweathermap.org/data/2.5/weather?units=metric&appid=${WEATHER_API_KEY}`;
+parcelHelpers.export(exports, "WORD_OF_THE_DAY_API_URL", ()=>WORD_OF_THE_DAY_API_URL);
+parcelHelpers.export(exports, "API_PROXY_SERVER_URL", ()=>API_PROXY_SERVER_URL);
+const UNSPLASH_API_URL = `https://api.unsplash.com/topics/wallpapers/photos/?orientation=landscape&per_page=30&client_id=`;
+const WEATHER_API_URL = `https://api.openweathermap.org/data/2.5/weather?units=metric`;
 const ON_THIS_DAY_API_URL = "https://en.wikipedia.org/api/rest_v1/feed/featured/";
+const WORD_OF_THE_DAY_API_URL = "https://api.wordnik.com/v4/words.json/wordOfTheDay?date=";
+const API_PROXY_SERVER_URL = "http://oblako.dufberg.se:81";
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"5OTZN":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
@@ -4836,6 +4870,7 @@ parcelHelpers.export(exports, "renderWeather", ()=>renderWeather);
 parcelHelpers.export(exports, "getGeolocation", ()=>getGeolocation);
 parcelHelpers.export(exports, "renderTimeDate", ()=>renderTimeDate);
 parcelHelpers.export(exports, "renderOnThisDayAPI", ()=>renderOnThisDayAPI);
+parcelHelpers.export(exports, "renderwordOfTheDayAPI", ()=>renderwordOfTheDayAPI);
 const mainContainer = document.getElementById("main-container");
 const sectionContainer = document.querySelectorAll(".section-container");
 const galleryContainer = document.getElementById("gallery-container");
@@ -4844,6 +4879,7 @@ const weatherContainer = document.getElementById("weather-container");
 const timeDateContainer = document.getElementById("time-date-container");
 const creditContainer = document.getElementById("credit-container");
 const onThisDayContainer = document.getElementById("on-this-day-container");
+const wordOfTheDayContainer = document.getElementById("word-of-the-day-container");
 const css = {
     cssBody: "margin: 0;",
     cssSectionContainer: "height: 100vh; width: auto;",
@@ -4890,6 +4926,13 @@ const css = {
       right: 1em;
       bottom: 1em;
       max-width: 30vw;
+   `,
+    cssWordOftheDayContainer: `
+      flex-direction: column;
+      position: absolute;
+      left: 1em;
+      top: 1em;
+      max-width: 30vw;
    `
 };
 const setCSS = function() {
@@ -4901,6 +4944,7 @@ const setCSS = function() {
     timeDateContainer.style.cssText = css.cssContentCards + css.cssTimeDateContainer;
     creditContainer.style.cssText = css.cssContentCards + css.cssCreditContainer;
     onThisDayContainer.style.cssText = css.cssContentCards + css.cssOnThisDayContainer;
+    wordOfTheDayContainer.style.cssText = css.cssContentCards + css.cssWordOftheDayContainer;
 };
 setCSS();
 const renderImageCredit = function(data) {
@@ -4943,6 +4987,13 @@ const renderOnThisDayAPI = function(data) {
     onThisDayContainer.innerHTML = `
       <span style="font-weight: bold">Did you know that on this day in ${data.year}....</span>
       <span>${data.text} Read more: ${data.pages.map((item)=>`<a href="${item.content_urls.desktop.page}">${item.normalizedtitle}</a>`).join(", ")}</span>
+   `;
+};
+const renderwordOfTheDayAPI = function(data) {
+    wordOfTheDayContainer.innerHTML = `
+      <p style="font-weight: bold">Word Of The Day: ${data.word}</p>
+      <span> ${data.definitions[0].text}</span>
+      <a href="https://wordnik.com/words/${data.word}">Learn more about this word on Wordnik</a>
    `;
 };
 

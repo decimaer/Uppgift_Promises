@@ -6,6 +6,7 @@ import {
 	UNSPLASH_API_URL,
 	WEATHER_API_URL,
 	ON_THIS_DAY_API_URL,
+	WORD_OF_THE_DAY_API_URL,
 } from "./config";
 
 //TODO: function to set background img and author credits (possibly changing every n seconds?)
@@ -43,8 +44,9 @@ const controlSetWeather = async function (pos) {
 		};
 
 		// store data
-		model.state.weatherData = await model.getData(
-			`${WEATHER_API_URL}&lat=${latitude}&lon=${longitude}`
+		model.state.weatherData = await model.getAuthorizedData(
+			`${WEATHER_API_URL}&lat=${latitude}&lon=${longitude}&appid=`,
+			"/openweathermap/"
 		);
 
 		console.log(latitude, longitude);
@@ -78,14 +80,24 @@ const controlTimeDate = function () {
 //https://en.wikipedia.org/api/rest_v1/feed/featured/2023/01/19
 
 const controlOnThisDayAPI = async function () {
-	await model.loadOnThisDayAPI(ON_THIS_DAY_API_URL);
+	try {
+		await model.loadOnThisDayAPI(ON_THIS_DAY_API_URL);
 
-	view.renderOnThisDayAPI(model.state.onThisDayAPI);
+		view.renderOnThisDayAPI(model.state.onThisDayAPI);
+	} catch (error) {}
 };
 
-//TODO: Other API 2
+//TODO: Other API 2: wordnik
+const controlWordOfTheDay = async function () {
+	try {
+		await model.loadWordOfTheDayAPI(WORD_OF_THE_DAY_API_URL);
+
+		view.renderWordOfTheDayAPI(model.state.wordOfTheDayAPI);
+	} catch (error) {}
+};
 
 controlGetGeolocation();
 controlSetBackgroundImage();
 controlTimeDate();
 controlOnThisDayAPI();
+controlWordOfTheDay();

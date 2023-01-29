@@ -1,5 +1,5 @@
 import axios from "axios";
-import { UNSPLASH_API_URL, ON_THIS_DAY_API_URL } from "./config";
+import { API_PROXY_SERVER_URL } from "./config";
 
 export const state = {
 	backgroundImage: {},
@@ -9,12 +9,17 @@ export const state = {
 };
 
 //TODO: get img url from remote node server
-export const getAuthorizedData = async function (url) {
+export const getAuthorizedData = async function (url, api) {
 	try {
 		const encodedURL = encodeURIComponent(url);
 
-		return await getData();
-	} catch (error) {}
+		console.log(encodedURL);
+		console.log(API_PROXY_SERVER_URL + api + "?url=" + encodedURL);
+
+		return await getData(API_PROXY_SERVER_URL + api + "?url=" + encodedURL);
+	} catch (error) {
+		console.error(error);
+	}
 };
 
 // general fetch funktion med axios
@@ -29,7 +34,10 @@ export const getData = async function (url) {
 export const loadBackgroundImage = async function (url) {
 	try {
 		// get collection of images
-		state.backgroundImage.fullData = await getData(url);
+		state.backgroundImage.fullData = await getAuthorizedData(
+			url,
+			"/unsplash/"
+		);
 
 		// choose random image
 		const random = Math.floor(Math.random() * 30);
@@ -78,6 +86,27 @@ export const loadOnThisDayAPI = async function (url) {
 		state.onThisDayAPI = data.data.onthisday[random];
 
 		console.log(state.onThisDayAPI);
+	} catch (error) {
+		console.error(error);
+	}
+};
+
+export const loadWordOfTheDayAPI = async function (url) {
+	try {
+		const date = new Date();
+		const year = date.getFullYear();
+		const month = (date.getMonth() + 1).toString().padStart(2, "0");
+		const day = date.getDate().toString().padStart(2, "0");
+
+		const fullURL = url + year + "-" + month + "-" + day;
+		console.log(fullURL);
+
+		const data = await getAuthorizedData(fullURL, "/wordoftheday/");
+		console.log(data);
+
+		state.wordOfTheDayAPI = data.data;
+
+		console.log(state.wordOfTheDayAPI);
 	} catch (error) {
 		console.error(error);
 	}

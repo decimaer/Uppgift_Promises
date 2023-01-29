@@ -1,10 +1,13 @@
-const http = require("http");
-const axios = require("axios");
-const url = require("url");
-const fs = require("fs");
+import http from "http";
+import axios from "axios";
+import fs from "fs";
 
-const unsplashAPIKey = "j-zMGC9DSdNwckUvHCyKnbObujQDpIoMlz7R1z1pTBQ";
-const weatherAPIKey = "cf884975fe56a901fb868d0f0d730477";
+import { unsplashAPIKey, weatherAPIKey, wordnikAPIKey } from "./apiKeys.mjs";
+
+const responseHeader = {
+	"Content-type": "application/json",
+	"Access-Control-Allow-Origin": "*",
+};
 
 const getData = async function (url) {
 	try {
@@ -19,41 +22,60 @@ const getData = async function (url) {
 	}
 };
 
-const server = http.createServer(async (request, response) => {
-	const path = new URL(request.url, "http://localhost:8000/");
-
-	if (path.pathname === "/unsplash") {
-		const sourceURL = decodeURIComponent(
-			path.searchParams.get("url") + unsplashAPIKey
+const serverHandler = async function (request, response) {
+	try {
+		await fs.writeFile(
+			"/usr/local/www/node/log",
+			`Request initiated with: ${request}`,
+			"utf-8",
+			() => {}
 		);
-		console.log(sourceURL);
 
-		const obj = await getData(sourceURL);
-		// const { keys, values } = Object.entries(obj);
-		// console.log(keys, values);
-		// for (const [key, value] of Object.entries(obj)) {
-		// 	console.log(`${key}: ${value}`);
-		// }
-		// console.log(obj.data);
-		response.writeHead(200, { "Content-type": "application/json" });
-		response.end(obj.data);
+		const path = new URL(request.url, "http://oblako.dufberg.se:81");
+
+		if (path.pathname === "/unsplash/") {
+			const sourceURL =
+				decodeURIComponent(path.searchParams.get("url")) + unsplashAPIKey;
+			console.log(sourceURL);
+
+			const obj = await getData(sourceURL);
+
+			response.writeHead(200, responseHeader);
+			response.end(obj.data);
+		}
+		if (path.pathname === "/openweathermap/") {
+			const sourceURL =
+				decodeURIComponent(path.searchParams.get("url")) + weatherAPIKey;
+			console.log(sourceURL);
+
+			const obj = await getData(sourceURL);
+
+			response.writeHead(200, responseHeader);
+			response.end(obj.data);
+		}
+		if (path.pathname === "/wordoftheday/") {
+			const sourceURL =
+				decodeURIComponent(path.searchParams.get("url")) +
+				"&api_key=" +
+				wordnikAPIKey;
+			console.log(sourceURL);
+
+			const obj = await getData(sourceURL);
+
+			response.writeHead(200, responseHeader);
+			response.end(obj.data);
+		} else {
+			fs.writeFile("log", `Error 404`, "utf-8");
+			response.writeHead(404);
+			response.end("<h1>Error 404 - file not found!</h1>");
+		}
+	} catch (error) {
+		fs.writeFile("log", `${error}`, "utf-8", () => {});
 	}
-	if (path.pathname === "/openweathermap") {
-		const sourceURL = decodeURIComponent(
-			path.searchParams.get("url") + weatherAPIKey
-		);
-		console.log(sourceURL);
+};
 
-		const obj = await getData(sourceURL);
+const server = http.createServer(serverHandler);
 
-		response.writeHead(200, { "Content-type": "application/json" });
-		response.end(obj.data);
-	} else {
-		response.writeHead(404);
-		response.end("<h1>Error 404 - file not found!</h1>");
-	}
-});
-
-server.listen(8000, "localhost", () => {
+server.listen(80, "oblako.dufberg.se", () => {
 	console.log("server listening...");
 });
