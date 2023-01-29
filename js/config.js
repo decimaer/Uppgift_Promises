@@ -7,8 +7,10 @@ export const WORD_OF_THE_DAY_API_URL =
 export const API_PROXY_SERVER_URL = "http://oblako.dufberg.se:81";
 
 // Error handling
-import bkgImagePath from "url:../img/photo-1573996987033-47fd3a4ca35e.jpeg";
-export const ERROR_BKG_IMAGE = bkgImagePath;
+// import bkgImagePath from "url:../img/photo-1573996987033-47fd3a4ca35e.jpeg";
+// export const ERROR_BKG_IMAGE = bkgImagePath;
+export const ERROR_BKG_IMAGE = "../img/photo-1573996987033-47fd3a4ca35e.jpeg";
+
 export const ERROR_IMAGE_ALT = "town on hill covered with snow";
 export const ERROR_IMAGE_CREDITS = {
 	name: "Visit Greenland",
