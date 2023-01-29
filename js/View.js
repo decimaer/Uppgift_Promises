@@ -86,7 +86,6 @@ const setCSS = function () {
 setCSS();
 
 export const renderImageCredit = function (data) {
-	console.log(data);
 	creditContainer.innerHTML = `
    <img src="${data.profile_image.medium}">
    <p>Photo by <a href="${data.links.self}">${data.name}</a> on <a href="https://unsplash.com/">Unsplash</a></p>

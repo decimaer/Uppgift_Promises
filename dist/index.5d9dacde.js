@@ -564,12 +564,17 @@ var _config = require("./config");
 //TODO: function to set background img and author credits (possibly changing every n seconds?)
 const controlSetBackgroundImage = async function() {
     try {
+        // create event
+        const event = new Event("imageDataLoaded");
+        // load image data
         await _model.loadBackgroundImage((0, _config.UNSPLASH_API_URL));
+        // emit event when data is loaded
+        document.dispatchEvent(event);
         const imageURL = _model.state.backgroundImage.currentBackground.urls.full;
         const altText = _model.state.backgroundImage.currentBackground.alt_description;
-        console.log(_model.state.backgroundImage.currentBackground);
         _view.renderBackgroundImage(_model.state.backgroundImage.currentBackground.urls.full, _model.state.backgroundImage.currentBackground.alt_description);
         _view.renderImageCredit(_model.state.backgroundImage.currentBackground.user);
+        console.info("Background loaded");
     } catch (error) {
         console.error(error);
     }
@@ -584,23 +589,17 @@ const controlSetWeather = async function(pos) {
         };
         // store data
         _model.state.weatherData = await _model.getAuthorizedData(`${(0, _config.WEATHER_API_URL)}&lat=${latitude}&lon=${longitude}&appid=`, "/openweathermap/");
-        console.log(latitude, longitude);
-        console.log(_model.state);
-        console.log(_model.state.weatherData);
         //render weather
         _view.renderWeather(_model.state.weatherData);
+        console.info("Weather API loaded");
     } catch (error) {
         console.error(error);
     }
 };
 const controlGetGeolocation = function() {
     _view.getGeolocation((pos)=>{
-        // controlSetWeather(Promise.resolve(pos));
         controlSetWeather(pos);
     });
-// const pos2 = await pos;
-// console.log(pos2);
-//
 };
 //TODO: current date and time function
 const controlTimeDate = function() {
@@ -612,20 +611,28 @@ const controlOnThisDayAPI = async function() {
     try {
         await _model.loadOnThisDayAPI((0, _config.ON_THIS_DAY_API_URL));
         _view.renderOnThisDayAPI(_model.state.onThisDayAPI);
-    } catch (error) {}
+        console.info("On this day API loaded");
+    } catch (error) {
+        console.error(error);
+    }
 };
 //TODO: Other API 2: wordnik
 const controlWordOfTheDay = async function() {
     try {
         await _model.loadWordOfTheDayAPI((0, _config.WORD_OF_THE_DAY_API_URL));
-        _view.renderwordOfTheDayAPI(_model.state.wordOfTheDayAPI);
-    } catch (error) {}
+        _view.renderWordOfTheDayAPI(_model.state.wordOfTheDayAPI);
+        console.info("Word of the day API loaded");
+    } catch (error) {
+        console.error(error);
+    }
 };
 controlGetGeolocation();
 controlSetBackgroundImage();
 controlTimeDate();
 controlOnThisDayAPI();
 controlWordOfTheDay();
+// gallery can only be initiated when image data is loaded
+document.addEventListener("imageDataLoaded", (0, _preloaderGallery.initIntersectionObserver));
 
 },{"./model":"Py0LO","./View":"5OTZN","./preloaderGallery":"3IGXL","./config":"4Wc5b"}],"Py0LO":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
@@ -649,8 +656,6 @@ const state = {
 const getAuthorizedData = async function(url, api) {
     try {
         const encodedURL = encodeURIComponent(url);
-        console.log(encodedURL);
-        console.log((0, _config.API_PROXY_SERVER_URL) + api + "?url=" + encodedURL);
         return await getData((0, _config.API_PROXY_SERVER_URL) + api + "?url=" + encodedURL);
     } catch (error) {
         console.error(error);
@@ -670,7 +675,6 @@ const loadBackgroundImage = async function(url) {
         // choose random image
         const random = Math.floor(Math.random() * 30);
         state.backgroundImage.currentBackground = state.backgroundImage.fullData.data[random];
-        console.log(state.backgroundImage);
     } catch (error) {
         console.error(error);
     }
@@ -697,14 +701,10 @@ const loadOnThisDayAPI = async function(url) {
         const month = (date.getMonth() + 1).toString().padStart(2, "0");
         const day = date.getDate().toString().padStart(2, "0");
         const fullURL = url + year + "/" + month + "/" + day;
-        console.log(fullURL);
         const data = await getData(fullURL);
-        console.log(data);
         const numberOfArticles = data.data.onthisday.length;
         const random = Math.floor(Math.random() * numberOfArticles);
-        console.log(random);
         state.onThisDayAPI = data.data.onthisday[random];
-        console.log(state.onThisDayAPI);
     } catch (error) {
         console.error(error);
     }
@@ -716,11 +716,8 @@ const loadWordOfTheDayAPI = async function(url) {
         const month = (date.getMonth() + 1).toString().padStart(2, "0");
         const day = date.getDate().toString().padStart(2, "0");
         const fullURL = url + year + "-" + month + "-" + day;
-        console.log(fullURL);
         const data = await getAuthorizedData(fullURL, "/wordoftheday/");
-        console.log(data);
         state.wordOfTheDayAPI = data.data;
-        console.log(state.wordOfTheDayAPI);
     } catch (error) {
         console.error(error);
     }
@@ -4870,7 +4867,7 @@ parcelHelpers.export(exports, "renderWeather", ()=>renderWeather);
 parcelHelpers.export(exports, "getGeolocation", ()=>getGeolocation);
 parcelHelpers.export(exports, "renderTimeDate", ()=>renderTimeDate);
 parcelHelpers.export(exports, "renderOnThisDayAPI", ()=>renderOnThisDayAPI);
-parcelHelpers.export(exports, "renderwordOfTheDayAPI", ()=>renderwordOfTheDayAPI);
+parcelHelpers.export(exports, "renderWordOfTheDayAPI", ()=>renderWordOfTheDayAPI);
 const mainContainer = document.getElementById("main-container");
 const sectionContainer = document.querySelectorAll(".section-container");
 const galleryContainer = document.getElementById("gallery-container");
@@ -4948,7 +4945,6 @@ const setCSS = function() {
 };
 setCSS();
 const renderImageCredit = function(data) {
-    console.log(data);
     creditContainer.innerHTML = `
    <img src="${data.profile_image.medium}">
    <p>Photo by <a href="${data.links.self}">${data.name}</a> on <a href="https://unsplash.com/">Unsplash</a></p>
@@ -4989,7 +4985,7 @@ const renderOnThisDayAPI = function(data) {
       <span>${data.text} Read more: ${data.pages.map((item)=>`<a href="${item.content_urls.desktop.page}">${item.normalizedtitle}</a>`).join(", ")}</span>
    `;
 };
-const renderwordOfTheDayAPI = function(data) {
+const renderWordOfTheDayAPI = function(data) {
     wordOfTheDayContainer.innerHTML = `
       <p style="font-weight: bold">Word Of The Day: ${data.word}</p>
       <span> ${data.definitions[0].text}</span>
@@ -4998,62 +4994,46 @@ const renderwordOfTheDayAPI = function(data) {
 };
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"3IGXL":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "initIntersectionObserver", ()=>initIntersectionObserver);
 var _modelJs = require("./model.js");
 const galleryContainer = document.getElementById("gallery-container");
 const cssGalleryImages = `
    height: 15em;
    width: auto;
 `;
-const cssGalleryBlur = `
-   filter: blur(20px);
-`;
 const galleryState = {
     galleryIsLoaded: false
-};
-const renderGallery = function(images) {
-    const allImagesMarkup = images.map((image)=>{
-        return `<img src=${image} class="thumbnail">`;
-    }).join("");
-    galleryContainer.insertAdjacentHTML("beforeend", allImagesMarkup);
-    galleryContainer.querySelectorAll("img").forEach((el)=>el.style.cssText = cssGalleryImages + cssGalleryBlur);
 };
 const controlPreloaderGallery = async function(entries) {
     try {
         if (!entries[0].isIntersecting) return;
         if (galleryState.galleryIsLoaded) return;
-        const thumbnails = _modelJs.state.backgroundImage.fullData.data.map((imgData)=>imgData.urls.thumb);
-        renderGallery(thumbnails);
-        const imagePromises = _modelJs.state.backgroundImage.fullData.data.map((imgData)=>{
-            new Promise((resolve, reject)=>{
+        const imagePromises = _modelJs.state.backgroundImage.fullData.data.map((imgData)=>new Promise((resolve, reject)=>{
                 const img = new Image();
                 img.src = imgData.urls.regular;
                 img.style.cssText = cssGalleryImages;
-                img.addEventListener("load", ()=>{
-                    galleryContainer.appendChild(img);
-                    resolve(img);
-                });
+                img.addEventListener("load", ()=>resolve(img));
                 img.addEventListener("error", (err)=>reject(err));
-            });
-        });
-        // This is just for demonstration purposes
-        imagePromises.push(new Promise((resolve, _)=>setTimeout(()=>resolve(), 2000)));
-        // Clear temporary thumbnails
-        imagePromises.unshift(new Promise((resolve, _)=>{
-            galleryContainer.querySelectorAll(".thumbnail").forEach((img)=>img.remove());
-            resolve();
-        }));
-        // await Promise.all(imagePromises);
+            }));
+        const settledImages = await Promise.allSettled(imagePromises);
+        settledImages.forEach((img)=>galleryContainer.appendChild(img.value));
         galleryState.galleryIsLoaded = true;
         console.info("Gallery loaded");
-    } catch (error) {}
+    } catch (error) {
+        console.error(error);
+    }
 };
-const observerOptions = {
-    root: null,
-    threshold: 0.1
+const initIntersectionObserver = function(e) {
+    const observerOptions = {
+        root: null,
+        threshold: 0.1
+    };
+    const intersectionObserver = new IntersectionObserver(controlPreloaderGallery, observerOptions);
+    intersectionObserver.observe(galleryContainer);
 };
-const intersectionObserver = new IntersectionObserver(controlPreloaderGallery, observerOptions);
-intersectionObserver.observe(galleryContainer);
 
-},{"./model.js":"Py0LO"}]},["jy52z","1Z4Rq"], "1Z4Rq", "parcelRequire7e12")
+},{"./model.js":"Py0LO","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["jy52z","1Z4Rq"], "1Z4Rq", "parcelRequire7e12")
 
 //# sourceMappingURL=index.5d9dacde.js.map

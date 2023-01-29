@@ -13,9 +13,6 @@ export const getAuthorizedData = async function (url, api) {
 	try {
 		const encodedURL = encodeURIComponent(url);
 
-		console.log(encodedURL);
-		console.log(API_PROXY_SERVER_URL + api + "?url=" + encodedURL);
-
 		return await getData(API_PROXY_SERVER_URL + api + "?url=" + encodedURL);
 	} catch (error) {
 		console.error(error);
@@ -43,8 +40,6 @@ export const loadBackgroundImage = async function (url) {
 		const random = Math.floor(Math.random() * 30);
 		state.backgroundImage.currentBackground =
 			state.backgroundImage.fullData.data[random];
-
-		console.log(state.backgroundImage);
 	} catch (error) {
 		console.error(error);
 	}
@@ -75,17 +70,12 @@ export const loadOnThisDayAPI = async function (url) {
 		const day = date.getDate().toString().padStart(2, "0");
 
 		const fullURL = url + year + "/" + month + "/" + day;
-		console.log(fullURL);
 
 		const data = await getData(fullURL);
-		console.log(data);
 		const numberOfArticles = data.data.onthisday.length;
 		const random = Math.floor(Math.random() * numberOfArticles);
-		console.log(random);
 
 		state.onThisDayAPI = data.data.onthisday[random];
-
-		console.log(state.onThisDayAPI);
 	} catch (error) {
 		console.error(error);
 	}
@@ -99,14 +89,10 @@ export const loadWordOfTheDayAPI = async function (url) {
 		const day = date.getDate().toString().padStart(2, "0");
 
 		const fullURL = url + year + "-" + month + "-" + day;
-		console.log(fullURL);
 
 		const data = await getAuthorizedData(fullURL, "/wordoftheday/");
-		console.log(data);
 
 		state.wordOfTheDayAPI = data.data;
-
-		console.log(state.wordOfTheDayAPI);
 	} catch (error) {
 		console.error(error);
 	}
