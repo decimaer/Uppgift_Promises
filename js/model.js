@@ -41,8 +41,6 @@ export const loadBackgroundImage = async function (url) {
 			"/unsplash/"
 		);
 
-		console.log(state);
-
 		// choose random image
 		const random = Math.floor(Math.random() * 30);
 		state.backgroundImage.currentBackground =
