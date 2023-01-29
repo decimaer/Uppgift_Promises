@@ -1,5 +1,5 @@
 # Uppgift Promises - Dashboard
-
+Hampus Dufberg Töttrup
 ## Hur köra
 
 Jag lyckades inte få den att funka på pages så installation sker enligt följande.
