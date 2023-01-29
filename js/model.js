@@ -1,5 +1,5 @@
 import axios from "axios";
-import { API_PROXY_SERVER_URL } from "./config";
+import { API_PROXY_SERVER_URL } from "./config.js";
 
 export const state = {
 	backgroundImage: {},

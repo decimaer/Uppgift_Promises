@@ -1,6 +1,6 @@
-import * as model from "./model";
-import * as view from "./View";
-import * as preloaderGallery from "./preloaderGallery";
+import * as model from "./model.js";
+import * as view from "./View.js";
+import * as preloaderGallery from "./preloaderGallery.js";
 
 import {
 	UNSPLASH_API_URL,
@@ -10,7 +10,7 @@ import {
 	ERROR_BKG_IMAGE,
 	ERROR_IMAGE_ALT,
 	ERROR_IMAGE_CREDITS,
-} from "./config";
+} from "./config.js";
 
 //TODO: function to set background img and author credits (possibly changing every n seconds?)
 const controlSetBackgroundImage = async function () {
