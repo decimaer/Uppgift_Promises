@@ -564,7 +564,7 @@ var _config = require("./config");
 //TODO: function to set background img and author credits (possibly changing every n seconds?)
 const controlSetBackgroundImage = async function() {
     try {
-        // create event
+        // create event to signal when data is loaded
         const event = new Event("imageDataLoaded");
         // load image data
         await _model.loadBackgroundImage((0, _config.UNSPLASH_API_URL));
@@ -576,7 +576,12 @@ const controlSetBackgroundImage = async function() {
         _view.renderImageCredit(_model.state.backgroundImage.currentBackground.user);
         console.info("Background loaded");
     } catch (error) {
-        console.error(error);
+        console.error("Error while loading image data: " + error.message);
+        _view.renderBackgroundImage((0, _config.ERROR_BKG_IMAGE), (0, _config.ERROR_IMAGE_ALT));
+        _view.renderImageCredit((0, _config.ERROR_IMAGE_CREDITS));
+        document.dispatchEvent(new CustomEvent("imageDataLoaded", {
+            detail: true
+        }));
     }
 };
 //TODO: weather api function
@@ -593,7 +598,8 @@ const controlSetWeather = async function(pos) {
         _view.renderWeather(_model.state.weatherData);
         console.info("Weather API loaded");
     } catch (error) {
-        console.error(error);
+        console.error("Error while loading weather data: " + error.message);
+        _view.renderError("weatherContainer");
     }
 };
 const controlGetGeolocation = function() {
@@ -613,7 +619,8 @@ const controlOnThisDayAPI = async function() {
         _view.renderOnThisDayAPI(_model.state.onThisDayAPI);
         console.info("On this day API loaded");
     } catch (error) {
-        console.error(error);
+        console.error("Error while loading On This Day API data: " + error.message);
+        _view.renderError("onThisDayContainer");
     }
 };
 //TODO: Other API 2: wordnik
@@ -623,7 +630,8 @@ const controlWordOfTheDay = async function() {
         _view.renderWordOfTheDayAPI(_model.state.wordOfTheDayAPI);
         console.info("Word of the day API loaded");
     } catch (error) {
-        console.error(error);
+        console.error("Error while loading Word Of The Day API data: " + error.message);
+        _view.renderError("wordOfTheDayContainer");
     }
 };
 controlGetGeolocation();
@@ -632,7 +640,15 @@ controlTimeDate();
 controlOnThisDayAPI();
 controlWordOfTheDay();
 // gallery can only be initiated when image data is loaded
-document.addEventListener("imageDataLoaded", (0, _preloaderGallery.initIntersectionObserver));
+document.addEventListener("imageDataLoaded", function(e) {
+    // check if event is emitted with error
+    if (e.detail) {
+        _preloaderGallery.renderError();
+        return;
+    }
+    // init gallery
+    _preloaderGallery.initIntersectionObserver();
+});
 
 },{"./model":"Py0LO","./View":"5OTZN","./preloaderGallery":"3IGXL","./config":"4Wc5b"}],"Py0LO":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
@@ -656,27 +672,30 @@ const state = {
 const getAuthorizedData = async function(url, api) {
     try {
         const encodedURL = encodeURIComponent(url);
-        return await getData((0, _config.API_PROXY_SERVER_URL) + api + "?url=" + encodedURL);
+        return getData((0, _config.API_PROXY_SERVER_URL) + api + "?url=" + encodedURL);
     } catch (error) {
-        console.error(error);
+        throw error;
     }
 };
 const getData = async function(url) {
     try {
-        return await (0, _axiosDefault.default).get(url);
+        const response = await (0, _axiosDefault.default).get(url);
+        response.status;
+        return response.data;
     } catch (error) {
-        console.error(error);
+        throw error;
     }
 };
 const loadBackgroundImage = async function(url) {
     try {
         // get collection of images
         state.backgroundImage.fullData = await getAuthorizedData(url, "/unsplash/");
+        console.log(state);
         // choose random image
         const random = Math.floor(Math.random() * 30);
-        state.backgroundImage.currentBackground = state.backgroundImage.fullData.data[random];
+        state.backgroundImage.currentBackground = state.backgroundImage.fullData[random];
     } catch (error) {
-        console.error(error);
+        throw error;
     }
 };
 const dateTime = function(callback) {
@@ -702,11 +721,11 @@ const loadOnThisDayAPI = async function(url) {
         const day = date.getDate().toString().padStart(2, "0");
         const fullURL = url + year + "/" + month + "/" + day;
         const data = await getData(fullURL);
-        const numberOfArticles = data.data.onthisday.length;
+        const numberOfArticles = data.onthisday.length;
         const random = Math.floor(Math.random() * numberOfArticles);
-        state.onThisDayAPI = data.data.onthisday[random];
+        state.onThisDayAPI = data.onthisday[random];
     } catch (error) {
-        console.error(error);
+        throw error;
     }
 };
 const loadWordOfTheDayAPI = async function(url) {
@@ -717,9 +736,9 @@ const loadWordOfTheDayAPI = async function(url) {
         const day = date.getDate().toString().padStart(2, "0");
         const fullURL = url + year + "-" + month + "-" + day;
         const data = await getAuthorizedData(fullURL, "/wordoftheday/");
-        state.wordOfTheDayAPI = data.data;
+        state.wordOfTheDayAPI = data;
     } catch (error) {
-        console.error(error);
+        throw error;
     }
 };
 
@@ -4852,15 +4871,70 @@ parcelHelpers.export(exports, "WEATHER_API_URL", ()=>WEATHER_API_URL);
 parcelHelpers.export(exports, "ON_THIS_DAY_API_URL", ()=>ON_THIS_DAY_API_URL);
 parcelHelpers.export(exports, "WORD_OF_THE_DAY_API_URL", ()=>WORD_OF_THE_DAY_API_URL);
 parcelHelpers.export(exports, "API_PROXY_SERVER_URL", ()=>API_PROXY_SERVER_URL);
+parcelHelpers.export(exports, "ERROR_BKG_IMAGE", ()=>ERROR_BKG_IMAGE);
+parcelHelpers.export(exports, "ERROR_IMAGE_ALT", ()=>ERROR_IMAGE_ALT);
+parcelHelpers.export(exports, "ERROR_IMAGE_CREDITS", ()=>ERROR_IMAGE_CREDITS);
+// Error handling
+var _photo157399698703347Fd3A4Ca35EJpeg = require("url:../img/photo-1573996987033-47fd3a4ca35e.jpeg");
+var _photo157399698703347Fd3A4Ca35EJpegDefault = parcelHelpers.interopDefault(_photo157399698703347Fd3A4Ca35EJpeg);
 const UNSPLASH_API_URL = `https://api.unsplash.com/topics/wallpapers/photos/?orientation=landscape&per_page=30&client_id=`;
 const WEATHER_API_URL = `https://api.openweathermap.org/data/2.5/weather?units=metric`;
 const ON_THIS_DAY_API_URL = "https://en.wikipedia.org/api/rest_v1/feed/featured/";
 const WORD_OF_THE_DAY_API_URL = "https://api.wordnik.com/v4/words.json/wordOfTheDay?date=";
 const API_PROXY_SERVER_URL = "http://oblako.dufberg.se:81";
+const ERROR_BKG_IMAGE = (0, _photo157399698703347Fd3A4Ca35EJpegDefault.default);
+const ERROR_IMAGE_ALT = "town on hill covered with snow";
+const ERROR_IMAGE_CREDITS = {
+    name: "Visit Greenland",
+    links: {
+        self: "https://api.unsplash.com/users/visitgreenland"
+    },
+    profile_image: {
+        medium: "https://images.unsplash.com/profile-1666964217102-88b68120c4ffimage?ixlib=rb-4.0.3&crop=faces&fit=crop&w=64&h=64"
+    }
+};
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"5OTZN":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","url:../img/photo-1573996987033-47fd3a4ca35e.jpeg":"1Qeka"}],"1Qeka":[function(require,module,exports) {
+module.exports = require("5d8de0f5963348e2").getBundleURL("ksUvU") + "photo-1573996987033-47fd3a4ca35e.ca507e9c.jpeg" + "?" + Date.now();
+
+},{"5d8de0f5963348e2":"lgJ39"}],"lgJ39":[function(require,module,exports) {
+"use strict";
+var bundleURL = {};
+function getBundleURLCached(id) {
+    var value = bundleURL[id];
+    if (!value) {
+        value = getBundleURL();
+        bundleURL[id] = value;
+    }
+    return value;
+}
+function getBundleURL() {
+    try {
+        throw new Error();
+    } catch (err) {
+        var matches = ("" + err.stack).match(/(https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/[^)\n]+/g);
+        if (matches) // The first two stack frames will be this function and getBundleURLCached.
+        // Use the 3rd one, which will be a runtime in the original bundle.
+        return getBaseURL(matches[2]);
+    }
+    return "/";
+}
+function getBaseURL(url) {
+    return ("" + url).replace(/^((?:https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/.+)\/[^/]+$/, "$1") + "/";
+} // TODO: Replace uses with `new URL(url).origin` when ie11 is no longer supported.
+function getOrigin(url) {
+    var matches = ("" + url).match(/(https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/[^/]+/);
+    if (!matches) throw new Error("Origin not found");
+    return matches[0];
+}
+exports.getBundleURL = getBundleURLCached;
+exports.getBaseURL = getBaseURL;
+exports.getOrigin = getOrigin;
+
+},{}],"5OTZN":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "renderError", ()=>renderError);
 parcelHelpers.export(exports, "renderImageCredit", ()=>renderImageCredit);
 parcelHelpers.export(exports, "renderBackgroundImage", ()=>renderBackgroundImage);
 parcelHelpers.export(exports, "renderWeather", ()=>renderWeather);
@@ -4868,15 +4942,17 @@ parcelHelpers.export(exports, "getGeolocation", ()=>getGeolocation);
 parcelHelpers.export(exports, "renderTimeDate", ()=>renderTimeDate);
 parcelHelpers.export(exports, "renderOnThisDayAPI", ()=>renderOnThisDayAPI);
 parcelHelpers.export(exports, "renderWordOfTheDayAPI", ()=>renderWordOfTheDayAPI);
-const mainContainer = document.getElementById("main-container");
-const sectionContainer = document.querySelectorAll(".section-container");
-const galleryContainer = document.getElementById("gallery-container");
-const contentCards = document.querySelectorAll(".content-cards");
-const weatherContainer = document.getElementById("weather-container");
-const timeDateContainer = document.getElementById("time-date-container");
-const creditContainer = document.getElementById("credit-container");
-const onThisDayContainer = document.getElementById("on-this-day-container");
-const wordOfTheDayContainer = document.getElementById("word-of-the-day-container");
+const elements = {
+    mainContainer: document.getElementById("main-container"),
+    sectionContainer: document.querySelectorAll(".section-container"),
+    galleryContainer: document.getElementById("gallery-container"),
+    contentCards: document.querySelectorAll(".content-cards"),
+    weatherContainer: document.getElementById("weather-container"),
+    timeDateContainer: document.getElementById("time-date-container"),
+    creditContainer: document.getElementById("credit-container"),
+    onThisDayContainer: document.getElementById("on-this-day-container"),
+    wordOfTheDayContainer: document.getElementById("word-of-the-day-container")
+};
 const css = {
     cssBody: "margin: 0;",
     cssSectionContainer: "height: 100vh; width: auto;",
@@ -4934,37 +5010,40 @@ const css = {
 };
 const setCSS = function() {
     document.body.style.cssText = css.cssBody;
-    sectionContainer.forEach((el)=>{
+    elements.sectionContainer.forEach((el)=>{
         el.style.cssText = css.cssSectionContainer;
     });
-    weatherContainer.style.cssText = css.cssContentCards + css.cssWeatherContainer;
-    timeDateContainer.style.cssText = css.cssContentCards + css.cssTimeDateContainer;
-    creditContainer.style.cssText = css.cssContentCards + css.cssCreditContainer;
-    onThisDayContainer.style.cssText = css.cssContentCards + css.cssOnThisDayContainer;
-    wordOfTheDayContainer.style.cssText = css.cssContentCards + css.cssWordOftheDayContainer;
+    elements.weatherContainer.style.cssText = css.cssContentCards + css.cssWeatherContainer;
+    elements.timeDateContainer.style.cssText = css.cssContentCards + css.cssTimeDateContainer;
+    elements.creditContainer.style.cssText = css.cssContentCards + css.cssCreditContainer;
+    elements.onThisDayContainer.style.cssText = css.cssContentCards + css.cssOnThisDayContainer;
+    elements.wordOfTheDayContainer.style.cssText = css.cssContentCards + css.cssWordOftheDayContainer;
 };
 setCSS();
+const renderError = function(apiContainer) {
+    elements[apiContainer].innerHTML = "Error loading";
+};
 const renderImageCredit = function(data) {
-    creditContainer.innerHTML = `
+    elements.creditContainer.innerHTML = `
    <img src="${data.profile_image.medium}">
    <p>Photo by <a href="${data.links.self}">${data.name}</a> on <a href="https://unsplash.com/">Unsplash</a></p>
    `;
-    const imageCreditContainer = creditContainer.firstElementChild;
+    const imageCreditContainer = elements.creditContainer.firstElementChild;
     imageCreditContainer.style.cssText = css.cssImageCreditContainer;
 };
 const renderBackgroundImage = function(url, alt) {
-    mainContainer.style.backgroundImage = `url('${url}')`;
-    mainContainer.style.backgroundSize = "cover";
-    mainContainer.setAttribute("title", `background image: ${alt}`);
+    elements.mainContainer.style.backgroundImage = `url('${url}')`;
+    elements.mainContainer.style.backgroundSize = "cover";
+    elements.mainContainer.setAttribute("title", `background image: ${alt}`);
 };
 const renderWeather = function(weatherData) {
-    weatherContainer.insertAdjacentHTML("beforeend", `
+    elements.weatherContainer.insertAdjacentHTML("beforeend", `
       <div>
-       <h1 class="place">${weatherData.data.name}</h1>
-       <p class="temp">${Math.round(weatherData.data.main.temp)}°C</p>
-       <p class="sky">${weatherData.data.weather[0].main}</p>
+       <h1 class="place">${weatherData.name}</h1>
+       <p class="temp">${Math.round(weatherData.main.temp)}°C</p>
+       <p class="sky">${weatherData.weather[0].main}</p>
        </div>
-       <img class="skyicon" src="http://openweathermap.org/img/wn/${weatherData.data.weather[0].icon}@2x.png" alt="">
+       <img class="skyicon" src="http://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png" alt="">
        `);
 };
 const getGeolocation = function(success) {
@@ -4973,20 +5052,20 @@ const getGeolocation = function(success) {
     });
 };
 const renderTimeDate = function(timeDate) {
-    timeDateContainer.innerHTML = `
+    elements.timeDateContainer.innerHTML = `
       <p>${timeDate}</p>
    `;
-    const timeDateTextElement = timeDateContainer.firstElementChild;
+    const timeDateTextElement = elements.timeDateContainer.firstElementChild;
     timeDateTextElement.style.cssText = css.cssTimeDateTextElement;
 };
 const renderOnThisDayAPI = function(data) {
-    onThisDayContainer.innerHTML = `
+    elements.onThisDayContainer.innerHTML = `
       <span style="font-weight: bold">Did you know that on this day in ${data.year}....</span>
       <span>${data.text} Read more: ${data.pages.map((item)=>`<a href="${item.content_urls.desktop.page}">${item.normalizedtitle}</a>`).join(", ")}</span>
    `;
 };
 const renderWordOfTheDayAPI = function(data) {
-    wordOfTheDayContainer.innerHTML = `
+    elements.wordOfTheDayContainer.innerHTML = `
       <p style="font-weight: bold">Word Of The Day: ${data.word}</p>
       <span> ${data.definitions[0].text}</span>
       <a href="https://wordnik.com/words/${data.word}">Learn more about this word on Wordnik</a>
@@ -4996,6 +5075,7 @@ const renderWordOfTheDayAPI = function(data) {
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"3IGXL":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "renderError", ()=>renderError);
 parcelHelpers.export(exports, "initIntersectionObserver", ()=>initIntersectionObserver);
 var _modelJs = require("./model.js");
 const galleryContainer = document.getElementById("gallery-container");
@@ -5010,7 +5090,7 @@ const controlPreloaderGallery = async function(entries) {
     try {
         if (!entries[0].isIntersecting) return;
         if (galleryState.galleryIsLoaded) return;
-        const imagePromises = _modelJs.state.backgroundImage.fullData.data.map((imgData)=>new Promise((resolve, reject)=>{
+        const imagePromises = _modelJs.state.backgroundImage.fullData.map((imgData)=>new Promise((resolve, reject)=>{
                 const img = new Image();
                 img.src = imgData.urls.regular;
                 img.style.cssText = cssGalleryImages;
@@ -5025,7 +5105,10 @@ const controlPreloaderGallery = async function(entries) {
         console.error(error);
     }
 };
-const initIntersectionObserver = function(e) {
+const renderError = function() {
+    galleryContainer.innerHTML = "Error loading gallery";
+};
+const initIntersectionObserver = function() {
     const observerOptions = {
         root: null,
         threshold: 0.1

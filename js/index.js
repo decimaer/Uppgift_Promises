@@ -1,18 +1,21 @@
 import * as model from "./model";
 import * as view from "./View";
-import { initIntersectionObserver as preloaderGallery } from "./preloaderGallery";
+import * as preloaderGallery from "./preloaderGallery";
 
 import {
 	UNSPLASH_API_URL,
 	WEATHER_API_URL,
 	ON_THIS_DAY_API_URL,
 	WORD_OF_THE_DAY_API_URL,
+	ERROR_BKG_IMAGE,
+	ERROR_IMAGE_ALT,
+	ERROR_IMAGE_CREDITS,
 } from "./config";
 
 //TODO: function to set background img and author credits (possibly changing every n seconds?)
 const controlSetBackgroundImage = async function () {
 	try {
-		// create event
+		// create event to signal when data is loaded
 		const event = new Event("imageDataLoaded");
 
 		// load image data
@@ -35,7 +38,12 @@ const controlSetBackgroundImage = async function () {
 
 		console.info("Background loaded");
 	} catch (error) {
-		console.error(error);
+		console.error("Error while loading image data: " + error.message);
+		view.renderBackgroundImage(ERROR_BKG_IMAGE, ERROR_IMAGE_ALT);
+		view.renderImageCredit(ERROR_IMAGE_CREDITS);
+		document.dispatchEvent(
+			new CustomEvent("imageDataLoaded", { detail: true })
+		);
 	}
 };
 
@@ -62,7 +70,8 @@ const controlSetWeather = async function (pos) {
 
 		console.info("Weather API loaded");
 	} catch (error) {
-		console.error(error);
+		console.error("Error while loading weather data: " + error.message);
+		view.renderError("weatherContainer");
 	}
 };
 
@@ -88,7 +97,10 @@ const controlOnThisDayAPI = async function () {
 
 		console.info("On this day API loaded");
 	} catch (error) {
-		console.error(error);
+		console.error(
+			"Error while loading On This Day API data: " + error.message
+		);
+		view.renderError("onThisDayContainer");
 	}
 };
 
@@ -101,7 +113,10 @@ const controlWordOfTheDay = async function () {
 
 		console.info("Word of the day API loaded");
 	} catch (error) {
-		console.error(error);
+		console.error(
+			"Error while loading Word Of The Day API data: " + error.message
+		);
+		view.renderError("wordOfTheDayContainer");
 	}
 };
 
@@ -112,4 +127,13 @@ controlOnThisDayAPI();
 controlWordOfTheDay();
 
 // gallery can only be initiated when image data is loaded
-document.addEventListener("imageDataLoaded", preloaderGallery);
+document.addEventListener("imageDataLoaded", function (e) {
+	// check if event is emitted with error
+	if (e.detail) {
+		preloaderGallery.renderError();
+		return;
+	}
+
+	// init gallery
+	preloaderGallery.initIntersectionObserver();
+});

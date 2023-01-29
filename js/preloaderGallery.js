@@ -16,7 +16,7 @@ const controlPreloaderGallery = async function (entries) {
 		if (!entries[0].isIntersecting) return;
 		if (galleryState.galleryIsLoaded) return;
 
-		const imagePromises = model.state.backgroundImage.fullData.data.map(
+		const imagePromises = model.state.backgroundImage.fullData.map(
 			(imgData) =>
 				new Promise((resolve, reject) => {
 					const img = new Image();
@@ -37,7 +37,11 @@ const controlPreloaderGallery = async function (entries) {
 	}
 };
 
-export const initIntersectionObserver = function (e) {
+export const renderError = function () {
+	galleryContainer.innerHTML = "Error loading gallery";
+};
+
+export const initIntersectionObserver = function () {
 	const observerOptions = {
 		root: null,
 		threshold: 0.1,

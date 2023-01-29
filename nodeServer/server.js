@@ -18,18 +18,18 @@ const getData = async function (url) {
 			responseType: "json",
 		});
 	} catch (error) {
-		console.error(error);
+		throw error;
 	}
 };
 
 const serverHandler = async function (request, response) {
 	try {
-		await fs.writeFile(
-			"/usr/local/www/node/log",
-			`Request initiated with: ${request}`,
-			"utf-8",
-			() => {}
-		);
+		// await fs.writeFile(
+		// 	"/usr/local/www/node/log",
+		// 	`Request initiated with: ${request}`,
+		// 	"utf-8",
+		// 	() => {}
+		// );
 
 		const path = new URL(request.url, "http://oblako.dufberg.se:81");
 
@@ -42,8 +42,7 @@ const serverHandler = async function (request, response) {
 
 			response.writeHead(200, responseHeader);
 			response.end(obj.data);
-		}
-		if (path.pathname === "/openweathermap/") {
+		} else if (path.pathname === "/openweathermap/") {
 			const sourceURL =
 				decodeURIComponent(path.searchParams.get("url")) + weatherAPIKey;
 			console.log(sourceURL);
@@ -52,8 +51,7 @@ const serverHandler = async function (request, response) {
 
 			response.writeHead(200, responseHeader);
 			response.end(obj.data);
-		}
-		if (path.pathname === "/wordoftheday/") {
+		} else if (path.pathname === "/wordoftheday/") {
 			const sourceURL =
 				decodeURIComponent(path.searchParams.get("url")) +
 				"&api_key=" +
@@ -65,12 +63,16 @@ const serverHandler = async function (request, response) {
 			response.writeHead(200, responseHeader);
 			response.end(obj.data);
 		} else {
-			fs.writeFile("log", `Error 404`, "utf-8");
+			// fs.writeFile("log", `Error 404`, "utf-8");
 			response.writeHead(404);
 			response.end("<h1>Error 404 - file not found!</h1>");
+			throw new Error(
+				`User request unavailable: ${path.pathname} @ ${path}`
+			);
 		}
 	} catch (error) {
-		fs.writeFile("log", `${error}`, "utf-8", () => {});
+		// fs.writeFile("log", `${error}`, "utf-8", () => {});
+		console.error(error);
 	}
 };
 

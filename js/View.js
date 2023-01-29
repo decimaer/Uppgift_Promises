@@ -1,14 +1,14 @@
-const mainContainer = document.getElementById("main-container");
-const sectionContainer = document.querySelectorAll(".section-container");
-const galleryContainer = document.getElementById("gallery-container");
-const contentCards = document.querySelectorAll(".content-cards");
-const weatherContainer = document.getElementById("weather-container");
-const timeDateContainer = document.getElementById("time-date-container");
-const creditContainer = document.getElementById("credit-container");
-const onThisDayContainer = document.getElementById("on-this-day-container");
-const wordOfTheDayContainer = document.getElementById(
-	"word-of-the-day-container"
-);
+const elements = {
+	mainContainer: document.getElementById("main-container"),
+	sectionContainer: document.querySelectorAll(".section-container"),
+	galleryContainer: document.getElementById("gallery-container"),
+	contentCards: document.querySelectorAll(".content-cards"),
+	weatherContainer: document.getElementById("weather-container"),
+	timeDateContainer: document.getElementById("time-date-container"),
+	creditContainer: document.getElementById("credit-container"),
+	onThisDayContainer: document.getElementById("on-this-day-container"),
+	wordOfTheDayContainer: document.getElementById("word-of-the-day-container"),
+};
 
 const css = {
 	cssBody: "margin: 0;",
@@ -68,51 +68,56 @@ const css = {
 
 const setCSS = function () {
 	document.body.style.cssText = css.cssBody;
-	sectionContainer.forEach((el) => {
+	elements.sectionContainer.forEach((el) => {
 		el.style.cssText = css.cssSectionContainer;
 	});
-	weatherContainer.style.cssText =
+	elements.weatherContainer.style.cssText =
 		css.cssContentCards + css.cssWeatherContainer;
-	timeDateContainer.style.cssText =
+	elements.timeDateContainer.style.cssText =
 		css.cssContentCards + css.cssTimeDateContainer;
 
-	creditContainer.style.cssText = css.cssContentCards + css.cssCreditContainer;
-	onThisDayContainer.style.cssText =
+	elements.creditContainer.style.cssText =
+		css.cssContentCards + css.cssCreditContainer;
+	elements.onThisDayContainer.style.cssText =
 		css.cssContentCards + css.cssOnThisDayContainer;
 
-	wordOfTheDayContainer.style.cssText =
+	elements.wordOfTheDayContainer.style.cssText =
 		css.cssContentCards + css.cssWordOftheDayContainer;
 };
 setCSS();
 
+export const renderError = function (apiContainer) {
+	elements[apiContainer].innerHTML = "Error loading";
+};
+
 export const renderImageCredit = function (data) {
-	creditContainer.innerHTML = `
+	elements.creditContainer.innerHTML = `
    <img src="${data.profile_image.medium}">
    <p>Photo by <a href="${data.links.self}">${data.name}</a> on <a href="https://unsplash.com/">Unsplash</a></p>
    `;
 
-	const imageCreditContainer = creditContainer.firstElementChild;
+	const imageCreditContainer = elements.creditContainer.firstElementChild;
 	imageCreditContainer.style.cssText = css.cssImageCreditContainer;
 };
 
 export const renderBackgroundImage = function (url, alt) {
-	mainContainer.style.backgroundImage = `url('${url}')`;
-	mainContainer.style.backgroundSize = "cover";
+	elements.mainContainer.style.backgroundImage = `url('${url}')`;
+	elements.mainContainer.style.backgroundSize = "cover";
 
-	mainContainer.setAttribute("title", `background image: ${alt}`);
+	elements.mainContainer.setAttribute("title", `background image: ${alt}`);
 };
 
 export const renderWeather = function (weatherData) {
-	weatherContainer.insertAdjacentHTML(
+	elements.weatherContainer.insertAdjacentHTML(
 		"beforeend",
 		`
       <div>
-       <h1 class="place">${weatherData.data.name}</h1>
-       <p class="temp">${Math.round(weatherData.data.main.temp)}°C</p>
-       <p class="sky">${weatherData.data.weather[0].main}</p>
+       <h1 class="place">${weatherData.name}</h1>
+       <p class="temp">${Math.round(weatherData.main.temp)}°C</p>
+       <p class="sky">${weatherData.weather[0].main}</p>
        </div>
        <img class="skyicon" src="http://openweathermap.org/img/wn/${
-				weatherData.data.weather[0].icon
+				weatherData.weather[0].icon
 			}@2x.png" alt="">
        `
 	);
@@ -125,16 +130,16 @@ export const getGeolocation = function (success) {
 };
 
 export const renderTimeDate = function (timeDate) {
-	timeDateContainer.innerHTML = `
+	elements.timeDateContainer.innerHTML = `
       <p>${timeDate}</p>
    `;
 
-	const timeDateTextElement = timeDateContainer.firstElementChild;
+	const timeDateTextElement = elements.timeDateContainer.firstElementChild;
 	timeDateTextElement.style.cssText = css.cssTimeDateTextElement;
 };
 
 export const renderOnThisDayAPI = function (data) {
-	onThisDayContainer.innerHTML = `
+	elements.onThisDayContainer.innerHTML = `
       <span style="font-weight: bold">Did you know that on this day in ${
 			data.year
 		}....</span>
@@ -148,7 +153,7 @@ export const renderOnThisDayAPI = function (data) {
 };
 
 export const renderWordOfTheDayAPI = function (data) {
-	wordOfTheDayContainer.innerHTML = `
+	elements.wordOfTheDayContainer.innerHTML = `
       <p style="font-weight: bold">Word Of The Day: ${data.word}</p>
       <span> ${data.definitions[0].text}</span>
       <a href="https://wordnik.com/words/${data.word}">Learn more about this word on Wordnik</a>

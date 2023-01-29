@@ -13,18 +13,23 @@ export const getAuthorizedData = async function (url, api) {
 	try {
 		const encodedURL = encodeURIComponent(url);
 
-		return await getData(API_PROXY_SERVER_URL + api + "?url=" + encodedURL);
+		return getData(API_PROXY_SERVER_URL + api + "?url=" + encodedURL);
 	} catch (error) {
-		console.error(error);
+		throw error;
 	}
 };
 
 // general fetch funktion med axios
 export const getData = async function (url) {
 	try {
-		return await axios.get(url);
+		const response = await axios.get(url);
+
+		if (!response.status === 200)
+			throw new Error(response.statusText + response.status);
+
+		return response.data;
 	} catch (error) {
-		console.error(error);
+		throw error;
 	}
 };
 
@@ -36,12 +41,14 @@ export const loadBackgroundImage = async function (url) {
 			"/unsplash/"
 		);
 
+		console.log(state);
+
 		// choose random image
 		const random = Math.floor(Math.random() * 30);
 		state.backgroundImage.currentBackground =
-			state.backgroundImage.fullData.data[random];
+			state.backgroundImage.fullData[random];
 	} catch (error) {
-		console.error(error);
+		throw error;
 	}
 };
 
@@ -72,12 +79,12 @@ export const loadOnThisDayAPI = async function (url) {
 		const fullURL = url + year + "/" + month + "/" + day;
 
 		const data = await getData(fullURL);
-		const numberOfArticles = data.data.onthisday.length;
+		const numberOfArticles = data.onthisday.length;
 		const random = Math.floor(Math.random() * numberOfArticles);
 
-		state.onThisDayAPI = data.data.onthisday[random];
+		state.onThisDayAPI = data.onthisday[random];
 	} catch (error) {
-		console.error(error);
+		throw error;
 	}
 };
 
@@ -92,8 +99,8 @@ export const loadWordOfTheDayAPI = async function (url) {
 
 		const data = await getAuthorizedData(fullURL, "/wordoftheday/");
 
-		state.wordOfTheDayAPI = data.data;
+		state.wordOfTheDayAPI = data;
 	} catch (error) {
-		console.error(error);
+		throw error;
 	}
 };
