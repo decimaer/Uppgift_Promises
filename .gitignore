@@ -1,5 +1,5 @@
-node_modules
-dist
-deploy
-.parcel-cache
+node_modules/
+dist/
+deploy/
+.parcel-cache/
 
